@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindMap — Visual Mind Mapping Tool</title>
+  <meta name="description" content="A powerful, feature-rich visual mind mapping tool with 9 layouts, 6 color themes, smart node interactions, undo/redo, and auto-save.">
+  <meta name="keywords" content="mind map, brainstorming, visual thinking, idea mapping">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- TOOLBAR                                                       -->
+  <!-- ============================================================ -->
+  <header id="toolbar" role="toolbar" aria-label="Mind Map Tools">
+
+    <!-- Hamburger Menu (Home Symbol) -->
+    <div class="toolbar-group" style="position:relative">
+      <button class="toolbar-btn toolbar-btn-maps" id="btn-hamburger" title="Menu">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </button>
+      <div id="hamburger-dropdown" class="dropdown hidden" role="menu">
+        <button class="dropdown-item" id="btn-maps" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            My Maps
+          </span>
+        </button>
+        <button class="dropdown-item" id="btn-new-map-menu" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Map
+          </span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="btn-undo" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+            Undo
+          </span>
+          <span class="shortcut">Ctrl+Z</span>
+        </button>
+        <button class="dropdown-item" id="btn-redo" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+            Redo
+          </span>
+          <span class="shortcut">Ctrl+Y</span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="btn-import" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import JSON
+          </span>
+        </button>
+        <button class="dropdown-item" id="btn-export" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export JSON
+          </span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="btn-search" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </span>
+          <span class="shortcut">Ctrl+F</span>
+        </button>
+        <button class="dropdown-item" id="btn-zoom-in" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="menu-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            Zoom In
+          </span>
+          <span class="shortcut">Ctrl+=</span>
+        </button>
+        <button class="dropdown-item" id="btn-zoom-out" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="menu-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            Zoom Out
+          </span>
+          <span class="shortcut">Ctrl+-</span>
+        </button>
+        <button class="dropdown-item" id="zoom-display" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Fit / Zoom 100%
+          </span>
+          <span class="shortcut">Ctrl+0</span>
+        </button>
+        <button class="dropdown-item" id="btn-center" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Center Map
+          </span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="btn-layout" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Layout Style
+          </span>
+        </button>
+        <button class="dropdown-item" id="btn-panel-theme" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            Color Themes
+          </span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item panel-toggle active" id="btn-panel-outline" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="menu-icon"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Outline View
+          </span>
+        </button>
+        <button class="dropdown-item panel-toggle" id="btn-panel-comment" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Comments
+          </span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="btn-clone" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Clone Node
+          </span>
+        </button>
+        <button class="dropdown-item dropdown-danger" id="btn-delete" role="menuitem">
+          <span class="menu-item-content">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            Delete Selected
+          </span>
+          <span class="shortcut">Del</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden input for file import -->
+    <input type="file" id="import-file-input" accept=".json" style="display:none">
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Map name (editable) -->
+    <div class="toolbar-group">
+      <input id="map-name-input" class="map-name-input" type="text" value="Untitled Map" maxlength="60"
+             spellcheck="false" autocomplete="off" title="Click to rename map">
+    </div>
+
+    <!-- Save status indicator -->
+    <div class="toolbar-group" style="min-width:72px">
+      <span id="save-indicator" class="save-indicator save-ok">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="si-icon si-ok">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="si-icon si-saving" style="display:none">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+        <span class="si-text">Saved</span>
+      </span>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Add Node (with dropdown) -->
+    <div class="toolbar-group" style="position:relative">
+      <button class="toolbar-btn toolbar-btn-add" id="btn-add" title="Add Topic">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <div id="add-dropdown" class="dropdown hidden" role="menu">
+        <button class="dropdown-item dropdown-item-active" data-action="addChild" role="menuitem">Add Child Topic</button>
+        <button class="dropdown-item" data-action="addSibling" role="menuitem">Add Sibling Topic</button>
+        <button class="dropdown-item" data-action="insertParent" role="menuitem">Insert Parent Topic</button>
+        <button class="dropdown-item" data-action="insertSibling" role="menuitem">Insert Sibling Topic</button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" data-action="addCentral" role="menuitem">Add Central Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- MAIN LAYOUT                                                   -->
+  <!-- ============================================================ -->
+  <div id="app-body">
+
+    <!-- Canvas -->
+    <div id="canvas-container">
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="f-glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="f-shadow">
+            <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="rgba(0,0,0,0.45)"/>
+          </filter>
+          <filter id="f-selected" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g id="canvas-root">
+          <g id="edges-layer"></g>
+          <g id="nodes-layer"></g>
+        </g>
+      </svg>
+      <div id="canvas-hint">Double-click to edit &nbsp;·&nbsp; Tab = child &nbsp;·&nbsp; Enter = sibling &nbsp;·&nbsp; Scroll = zoom &nbsp;·&nbsp; Drag = pan</div>
+    </div>
+
+    <!-- Right Panel -->
+    <aside id="right-panel" class="panel-open">
+      <!-- Outline -->
+      <div id="panel-outline" class="panel-page">
+        <div class="panel-header">
+          <span class="panel-title">Outline</span>
+          <button class="panel-close" id="btn-close-panel" title="Close">✕</button>
+        </div>
+        <div id="outline-tree"></div>
+      </div>
+      <!-- Comments -->
+      <div id="panel-comment" class="panel-page hidden">
+        <div class="panel-header">
+          <span class="panel-title">Comments</span>
+          <button class="panel-close" id="btn-close-panel-2" title="Close">✕</button>
+        </div>
+        <div id="comment-list">
+          <p class="panel-empty">Click <strong>T</strong> on any node to add a comment.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- INLINE EDIT OVERLAY                                          -->
+  <!-- ============================================================ -->
+  <div id="edit-overlay" class="hidden">
+    <input id="edit-input" type="text" autocomplete="off" spellcheck="false" aria-label="Edit node label">
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- COMMENT POPOVER                                              -->
+  <!-- ============================================================ -->
+  <div id="comment-popover" class="hidden" role="dialog" aria-label="Node Comment">
+    <div class="popover-header">
+      <span class="popover-title">💬 Comment</span>
+      <button class="popover-x" id="btn-comment-x">✕</button>
+    </div>
+    <textarea id="comment-textarea" placeholder="Add a comment for this node..."></textarea>
+    <div class="popover-footer">
+      <button class="btn-ghost" id="btn-comment-cancel">Cancel</button>
+      <button class="btn-accent" id="btn-comment-save">Save</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SEARCH BAR                                                   -->
+  <!-- ============================================================ -->
+  <div id="search-bar" class="hidden" role="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input id="search-input" type="text" placeholder="Search topics…" autocomplete="off">
+    <span id="search-count" class="search-count"></span>
+    <button id="btn-search-prev" class="search-nav" title="Previous (Shift+Enter)">↑</button>
+    <button id="btn-search-next" class="search-nav" title="Next (Enter)">↓</button>
+    <button id="btn-search-close" class="search-close" title="Close (Esc)">✕</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LAYOUT MODAL                                                 -->
+  <!-- ============================================================ -->
+  <div id="modal-layout" class="modal hidden" role="dialog" aria-labelledby="modal-layout-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-layout-title">Layout mode</h2>
+        <button class="modal-x" data-close="modal-layout">✕</button>
+      </div>
+      <div id="layout-grid" class="layout-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- THEME MODAL                                                  -->
+  <!-- ============================================================ -->
+  <div id="modal-theme" class="modal hidden" role="dialog" aria-labelledby="modal-theme-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-theme-title">Color Themes</h2>
+        <button class="modal-x" data-close="modal-theme">✕</button>
+      </div>
+      <div id="theme-grid" class="theme-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MAPS MODAL (Dashboard)                                        -->
+  <!-- ============================================================ -->
+  <div id="modal-maps" class="modal hidden" role="dialog" aria-labelledby="modal-maps-title">
+    <div class="modal-box maps-modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-maps-title">My Maps</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-accent" id="btn-new-map">+ New Map</button>
+          <button class="modal-x" data-close="modal-maps">✕</button>
+        </div>
+      </div>
+      <div id="maps-empty" class="maps-empty hidden">
+        <div class="maps-empty-icon">🗺️</div>
+        <p>No saved maps yet. Create your first one!</p>
+      </div>
+      <div id="maps-grid" class="maps-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CONTEXT MENU (right-click)                                   -->
+  <!-- ============================================================ -->
+
+  <div id="ctx-menu" class="ctx-menu hidden" role="menu">
+    <button class="dropdown-item" data-ctx="addChild">Add Child Topic</button>
+    <button class="dropdown-item" data-ctx="addSibling">Add Sibling Topic</button>
+    <button class="dropdown-item" data-ctx="insertParent">Insert Parent Topic</button>
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item" data-ctx="rename">Rename <span class="shortcut">F2</span></button>
+    <button class="dropdown-item" data-ctx="clone">Clone Node</button>
+    <button class="dropdown-item" data-ctx="collapse">Toggle Collapse</button>
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item dropdown-danger" data-ctx="delete">Delete <span class="shortcut">Del</span></button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TOAST CONTAINER                                              -->
+  <!-- ============================================================ -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>

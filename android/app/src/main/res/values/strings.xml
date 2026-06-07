@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">naya-mindmap</string>
+    <string name="title_activity_main">naya-mindmap</string>
+    <string name="package_name">com.naya.mindmap</string>
+    <string name="custom_url_scheme">com.naya.mindmap</string>
+</resources>

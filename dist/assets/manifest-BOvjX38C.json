@@ -1,0 +1,17 @@
+{
+  "name": "MindMap Pro",
+  "short_name": "MindMap",
+  "description": "Visual Mind Mapping Tool with Google Drive Support",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#13131a",
+  "theme_color": "#252530",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

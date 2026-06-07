@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal & Privacy | Naya Solutions</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #0b0c10;
+      --text: #f8f9fa;
+      --text2: #adb5bd;
+      --accent: #4DD0E1;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 24px;
+    }
+    nav {
+      padding: 24px 0;
+      max-width: 800px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+    }
+    h1 { margin-bottom: 24px; font-size: 2.5rem; }
+    h2 { margin-top: 40px; margin-bottom: 16px; color: var(--accent); }
+    p { margin-bottom: 16px; color: var(--text2); }
+    ul { margin-bottom: 24px; color: var(--text2); padding-left: 20px; }
+    li { margin-bottom: 8px; }
+
+    .highlight-box {
+      background: rgba(77, 208, 225, 0.05);
+      border: 1px solid var(--accent);
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/">&larr; Back to Home</a>
+  </nav>
+
+  <div class="container">
+    <h1>Privacy Policy & Terms of Service</h1>
+    <p>Last Updated: June 2026</p>
+
+    <div class="highlight-box">
+      <strong>TL;DR: The "Zero-Cloud" Guarantee</strong><br/>
+      Naya MindMap does not use backend database servers. We do not collect, read, store, or sell your mind map data. Everything you create stays locally on your device or in your personal Google Drive.
+    </div>
+
+    <h2>1. Data Collection & Privacy</h2>
+    <p>We respect your privacy. Because Naya MindMap operates entirely on the client-side (within your browser or the mobile application natively), we do not transmit your creative content to our servers.</p>
+    <ul>
+      <li><strong>Mind Maps:</strong> All nodes, text, and structure are stored locally on your device using HTML5 LocalStorage, or optionally synced to your own Google Drive using the Google Drive API.</li>
+      <li><strong>Encryption:</strong> Exported JSON files are AES-encrypted to protect your data from being read by unauthorized third-party applications.</li>
+      <li><strong>Analytics:</strong> We use PostHog to track anonymous usage statistics (e.g., button clicks and page views) strictly to improve the app's performance. No personally identifiable information (PII) is captured.</li>
+    </ul>
+
+    <h2>2. Google Drive Integration</h2>
+    <p>If you choose to use the Premium Google Drive Sync feature, the app requests permission to view and manage files it creates in your Google Drive. We do not have access to any other files in your Drive, and your authentication token is never sent to our servers.</p>
+
+    <h2>3. Premium Purchases (Stripe & Google Play)</h2>
+    <p>Payments are processed securely via Stripe or Google Play Billing. Naya Solutions does not process, capture, or store your raw credit card information. Your Premium status is verified locally via secure tokens or native cryptographic receipts.</p>
+
+    <h2>4. Terms of Service</h2>
+    <p>By using Naya MindMap, you agree to not reverse-engineer the proprietary AES file encryption. The software is provided "as is", without warranty of any kind. In no event shall the authors be liable for any claim, damages, or other liability arising from your use of the software.</p>
+
+    <h2>5. Contact</h2>
+    <p>If you have any questions about this Privacy Policy, please contact Naya Solutions support.</p>
+  </div>
+
+</body>
+</html>
