@@ -1,27 +1,74 @@
-# MindMap Application
+# Naya MindMap 🧠
 
-A powerful, feature-rich visual mind mapping tool built with HTML, CSS, and JS. 
+> The Ultimate Zero-Cloud Privacy Canvas
 
-## Features
+Naya MindMap is a blazing-fast, strictly local, and highly secure Mind Mapping application designed for individuals and teams who demand total privacy. Built with a modern web stack and seamlessly wrapped into a native Android app using Capacitor, Naya MindMap guarantees that your thoughts remain entirely yours.
 
-- **9 Layout Modes**: Horizontal, From Parent, Free Form, Vertical, Top Down, List, Linear, Radial, Matrix.
-- **Color Themes**: 6 beautiful color themes (Curated, harmonious palettes, sleek dark mode).
-- **Core UI**: Double-click edit, Context menu, Keyboard shortcuts (undo/redo, add child/sibling).
-- **Smooth Zoom and Pan**: Mouse wheel or trackpad provides smooth zooming (capped at 15% per notch, scroll sensitivity based). Drag to pan.
-- **Local Persistence & Database (IndexedDB)**:
-  - **IndexedDB**: Replaces `localStorage` (5MB limit) with IndexedDB — capable of storing hundreds of MB.
-  - **Multiple Maps**: My Maps Dashboard shows all saved maps as visual cards with a mini SVG preview, node count, and last edited time.
-  - **Editable Map Name**: The name field in the toolbar is click-to-edit. Auto-saves 800ms after you stop typing.
-  - **Live Save Indicator**:
-    - **Saving…**: Amber pill with spinning clock.
-    - **Saved**: Green pill with checkmark.
-    - **Error**: Red pill.
-  - **Auto-save**: Every action triggers auto-save with a 700ms debounce. Reopening the page automatically loads the most recently edited map.
-  - **Export/Import**: Save maps as JSON and load them back later.
+![Naya MindMap Preview](public/icon.png)
 
-## Getting Started
+## ✨ Premium Features
 
-1. Open `index.html` in your web browser.
-2. Start adding topics using the `+ Add Topic` button or the `Tab`/`Enter` keys.
-3. Edit topics by double-clicking on them or pressing `F2`.
-4. Your progress will be saved automatically to your browser's local database!
+- **Zero-Cloud Architecture:** We do not have a database. We do not have servers. Every single keystroke is stored exclusively on your local device.
+- **Proprietary AES Encryption:** All exported files (`.naya` format) and Google Drive backups are locked with military-grade AES encryption. Your mindmaps cannot be read by third-party text editors or competitor applications.
+- **Cross-Platform:** Available as a lightning-fast Web Application and a native Android App.
+- **Dynamic Layouts:** Seamlessly switch between Free-Form dragging and Auto-Arrange snapping.
+- **Infinite Canvas:** Drag, zoom, and pan across a limitless workspace.
+
+## 🛠 Tech Stack
+
+- **Frontend:** Vanilla JavaScript, HTML5, CSS3 (Zero heavy frameworks for maximum performance)
+- **Bundler:** Vite
+- **Mobile Wrapper:** Capacitor.js (Android)
+- **Security:** `crypto-js` for AES file encryption
+- **Testing:** Jest (Unit) & Playwright (E2E)
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- [Android Studio](https://developer.android.com/studio) (If you wish to build the Android APK)
+
+### Installation
+
+1. Clone the repository and navigate into the directory:
+   ```bash
+   cd mindmap
+   ```
+
+2. Install the necessary dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+   *Your app will be live at `http://localhost:5500`.*
+
+## 📦 Building for Production
+
+### Web Version
+To generate the highly optimized, minified static files for web hosting:
+```bash
+npm run build
+```
+The output will be placed in the `dist/` folder, ready to be deployed to Vercel, Netlify, or GitHub Pages.
+
+### Android Version (Google Play Store)
+To sync your latest web build to the native Android environment:
+```bash
+npm run build && npm run sync
+```
+Then, open the project in Android Studio:
+```bash
+npx cap open android
+```
+From Android Studio, you can generate your signed `.aab` (Android App Bundle) via **Build > Generate Signed Bundle / APK...** and upload it to the Google Play Store!
+
+## 📄 Legal & Privacy
+
+Naya MindMap strictly adheres to a Zero-Cloud privacy model. For full details, please refer to our integrated Privacy Policy and Terms of Service located in `legal.html`.
+
+---
+*Built with ❤️ by Naya Solutions*
