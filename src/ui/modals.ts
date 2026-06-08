@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from '../core/utils.js';
 import { decryptPayload } from '../core/crypto.js';
 
@@ -503,6 +504,12 @@ _clearDropTarget() {
     /* can't reparent root */
     if (dragId === this.rootId) { this.toast('Cannot reparent root', 'warn'); return; }
 
+    /* check for cycles (can't move parent node inside its own subtree) */
+    if (this._isDescendantOf(newParentId, dragId)) {
+      this.toast('Cannot move a parent node inside its own descendant', 'error');
+      return;
+    }
+
     this._pushUndo();
 
     /* remove from old parent */
@@ -749,7 +756,11 @@ _inheritSide(id, s) {
     n.children.forEach(c => { this.sides.set(c, s); this._inheritSide(c, s); });
   }
 
-_newMap() {
+  _newMap() {
+    if (this.isLocked) {
+      this.toast('MindMap is locked', 'warn');
+      return;
+    }
     this._confirm('Create a new mind map? The current map will be cleared.').then(ok => {
       if (!ok) return;
       this.nodes.clear(); this.sides.clear();
@@ -828,10 +839,12 @@ _setSaveState(state) {
     }
   }
 
-_schedSave() {
+  _schedSave() {
     clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => this._saveDB(), 700);
+    this._setSaveState('saving');
+    this.saveTimer = setTimeout(() => this._saveDB(), 2000);
   }
+
 
 _fallbackSave() {
     try {
@@ -867,7 +880,7 @@ _fallbackLoad() {
     return false;
   }
 
-_applyMapData(d) {
+  _applyMapData(d) {
     this.nodes.clear();
     Object.entries(d.nodes || {}).forEach(([id, n]) =>
       this.nodes.set(id, { ...n, children: n.children || [] }));
@@ -882,9 +895,19 @@ _applyMapData(d) {
     this.panY        = d.panY  || 0;
     this.currentMapId   = d.id        || null;
     this._createdAt     = d.createdAt || new Date().toISOString();
+    this.isLocked       = false;
+    /* update mode indicator badge if present in DOM */
+    const badge = document.getElementById('editor-mode-indicator');
+    if (badge) {
+      badge.innerHTML = '✏️<span class="btn-label"> Edit</span>';
+      badge.classList.remove('editor-mode-lock');
+      badge.classList.add('editor-mode-edit');
+    }
+    document.getElementById('btn-mode-edit')?.classList.add('dropdown-item-active');
+    document.getElementById('btn-mode-lock')?.classList.remove('dropdown-item-active');
     /* update map name in toolbar */
     const ni = document.getElementById('map-name-input');
-    if (ni) ni.value = d.name || 'Untitled Map';
+    if (ni) ni.value = d.name || 'Welcome to MindMap';
   }
 
 async _openMapsModal() {
@@ -943,7 +966,7 @@ async _renderMapsGrid() {
           </svg>
         </div>
         <div class="mc-body">
-          <div class="mc-name">${map.name || 'Untitled Map'}</div>
+          <div class="mc-name">${map.name || 'Welcome to MindMap'}</div>
           <div class="mc-meta">
             <span>📄 ${nodeCount} node${nodeCount !== 1 ? 's' : ''}</span>
             <span>· ${updated}</span>
@@ -994,7 +1017,11 @@ async _deleteMap(id) {
     try { await this._db.delete(id); } catch(e) {}
   }
 
-async _createNewMap() {
+  async _createNewMap() {
+    if (this.isLocked) {
+      this.toast('MindMap is locked', 'warn');
+      return;
+    }
     /* save current */
     await this._saveDB();
     this.nodes.clear(); this.sides.clear();
@@ -1008,7 +1035,7 @@ async _createNewMap() {
     this.panY = (c?.clientHeight || 600) / 2;
     this.zoom = 1;
     const ni = document.getElementById('map-name-input');
-    if (ni) ni.value = 'Untitled Map';
+    if (ni) ni.value = 'Welcome to MindMap';
     const rid = this._addNode(null, 'Central Theme');
     this.render();
     this._startEdit(rid);
@@ -1016,34 +1043,12 @@ async _createNewMap() {
     this._schedSave();
   }
 
-exportSVG() {
-    if (!this.requirePremium()) return;
-    const nameEl = document.getElementById('map-name-input');
-    const name   = nameEl?.value.trim() || 'mindmap';
-    const svgEl  = document.getElementById('canvas');
-    if (!svgEl) return;
-    /* Clone SVG and embed current dimensions */
-    const clone = svgEl.cloneNode(true);
-    const bbox  = svgEl.getBBox ? svgEl.getBBox() : null;
-    /* remove hover-only elements */
-    clone.querySelectorAll('.node-hover-bridge, .node-actions').forEach(el => el.remove());
-    /* Add background */
-    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
-    bg.setAttribute('fill', '#12121a');
-    clone.insertBefore(bg, clone.firstChild);
-    const serializer = new XMLSerializer();
-    const svgStr     = serializer.serializeToString(clone);
-    const blob       = new Blob([svgStr], { type: 'image/svg+xml' });
-    const url        = URL.createObjectURL(blob);
-    const a          = document.createElement('a');
-    a.href = url; a.download = `${name.replace(/\s+/g,'-').toLowerCase()}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.toast('SVG exported!', 'success');
-  }
 
-setNodeImage(id, url) {
+  setNodeImage(id, url) {
+    if (this.isLocked) {
+      this.toast('MindMap is locked', 'warn');
+      return;
+    }
     const node = this.nodes.get(id);
     if (!node) return;
     this._pushUndo();
@@ -1056,13 +1061,25 @@ setNodeImage(id, url) {
     this.toast(url ? 'Image added!' : 'Image removed', 'success');
   }
 
-_importFile(file) {
+  _importFile(file) {
     const reader = new FileReader();
     reader.onload = async e => {
       try {
         let parsed = JSON.parse(e.target.result);
         if (parsed && parsed.encrypted) {
-          parsed = await decryptPayload(parsed);
+          let password;
+          if (parsed.salt) {
+            try {
+              password = await this.promptPassword(
+                'Decrypt MindMap',
+                'This MindMap file is password-protected. Please enter the password to open it.'
+              );
+            } catch (pErr) {
+              this.toast('Import cancelled: password required', 'warn');
+              return;
+            }
+          }
+          parsed = await decryptPayload(parsed, password);
         }
         this._importJSON(parsed);
       } catch (err) {
@@ -1073,7 +1090,8 @@ _importFile(file) {
     reader.readAsText(file);
   }
 
-_importJSON(data) {
+
+  _importJSON(data) {
     if (!data.nodes || !data.rootId) { this.toast('Invalid mind map file', 'error'); return; }
     this._pushUndo();
     this.currentMapId = null; /* treat as new map after import */
@@ -1084,6 +1102,7 @@ _importJSON(data) {
     this.rootId   = data.rootId;
     this.colorIdx = data.colorIdx || 0;
     this.sides    = new Map(Object.entries(data.sides || {}));
+    this.crossLinks = data.crossLinks || [];
     if (data.theme  && THEMES[data.theme])  this.theme  = data.theme;
     if (data.layout) this.layout = data.layout;
     const ni = document.getElementById('map-name-input');

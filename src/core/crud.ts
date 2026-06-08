@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from './utils.js';
 
 export const CrudMixin = class {
@@ -110,7 +111,16 @@ _addNode(parentId, label='New Topic', opts={}) {
     return id;
   }
 
-deleteNode(id) {
+  _isDescendantOf(nodeId, parentId) {
+    let curr = this.nodes.get(nodeId);
+    while (curr && curr.parentId) {
+      if (curr.parentId === parentId) return true;
+      curr = this.nodes.get(curr.parentId);
+    }
+    return false;
+  }
+
+  deleteNode(id) {
     if (this.isLocked) {
       this.toast('MindMap is locked', 'warn');
       return;
@@ -128,13 +138,19 @@ deleteNode(id) {
       if (par) par.children = par.children.filter(c => c !== id);
     }
     /* recurse */
+    const deletedIds = new Set();
     const del = nid => {
       const n = this.nodes.get(nid); if (!n) return;
       n.children.forEach(del);
       this.nodes.delete(nid);
       this.sides.delete(nid);
+      deletedIds.add(nid);
     };
     del(id);
+
+    /* clean up related cross links */
+    this.crossLinks = this.crossLinks.filter(cl => !deletedIds.has(cl.from) && !deletedIds.has(cl.to));
+
     if (this.selected === id) this.selected = null;
     this._applyLayout();
     this.render();

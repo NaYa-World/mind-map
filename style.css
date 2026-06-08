@@ -174,7 +174,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
   transition: background var(--trans), color var(--trans), border-color var(--trans), box-shadow var(--trans);
   border: 1px solid transparent;
   user-select: none;
@@ -222,6 +222,7 @@ body {
   position: relative;
   overflow: hidden;
   background: var(--bg);
+  touch-action: none;
 }
 
 /* Dot-grid background */
@@ -244,7 +245,9 @@ body {
   height: 100%;
   cursor: default;
   z-index: 1;
+  touch-action: none;
 }
+
 
 #canvas-hint {
   position: absolute;
@@ -1114,6 +1117,12 @@ body {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+@media (max-width: 1100px) {
+  .btn-label { display: none !important; }
+  .toolbar-btn-text { padding: 0 6px !important; min-width: 32px !important; }
+  .editor-mode-badge { padding: 4px 6px !important; }
+}
+
 @media (max-width: 768px) {
   .desktop-only {
     display: none !important;

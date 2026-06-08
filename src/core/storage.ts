@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from './utils.js';
 import { encryptPayload } from './crypto.js';
 
@@ -31,7 +32,17 @@ async _saveDB() {
       v: 3,
     };
     try {
-      const encryptedData = await encryptPayload(JSON.stringify(data));
+      let password;
+      try {
+        password = await this.promptPassword(
+          'Set MindMap Password',
+          'Enter a password to encrypt this MindMap file. You must remember this password to import it later.'
+        );
+      } catch (e) {
+        this.toast('Export cancelled: password required', 'warn');
+        return;
+      }
+      const encryptedData = await encryptPayload(JSON.stringify(data), password);
       const fileContent = JSON.stringify(encryptedData, null, 2);
       const filename = `${name.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
 
@@ -67,6 +78,7 @@ async _saveDB() {
       this.toast('Secure export failed', 'error');
     }
   }
+
 
   exportSVG() {
     if (!this.requirePremium()) return;

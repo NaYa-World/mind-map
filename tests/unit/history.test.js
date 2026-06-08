@@ -6,7 +6,7 @@
 // and expects the DOM to exist. 
 // Instead we just mock what we need to test the logic of Undo/Redo.
 
-import { HistoryMixin } from '../../src/core/history.js';
+import { HistoryMixin } from '../../src/core/history.ts';
 
 class MockMindMap {
   constructor() {
@@ -58,6 +58,7 @@ class MockMindMap {
   _renderOutline() {}
   render() {}
   _saveDB() {}
+  _schedSave() {}
 }
 
 describe('History (Undo/Redo)', () => {

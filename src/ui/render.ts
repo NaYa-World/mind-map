@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from '../core/utils.js';
 
 export const RenderMixin = class {

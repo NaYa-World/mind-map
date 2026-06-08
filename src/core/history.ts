@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from './utils.js';
 
 export const HistoryMixin = class {
@@ -7,6 +8,7 @@ undo() {
     this._restore(this.undoStack.pop());
     this.render();
     this._updateUndoBtns();
+    this._schedSave();
     this.toast('Undo', 'info');
   }
 
@@ -16,6 +18,7 @@ redo() {
     this._restore(this.redoStack.pop());
     this.render();
     this._updateUndoBtns();
+    this._schedSave();
     this.toast('Redo', 'info');
   }
 
@@ -53,7 +56,7 @@ _restore(snap) {
 
 _buildPayload() {
     const ni = document.getElementById('map-name-input');
-    const name = ni?.value.trim() || 'Untitled Map';
+    const name = ni?.value.trim() || 'Welcome to MindMap';
     return {
       nodes:     Object.fromEntries(this.nodes),
       rootId:    this.rootId,

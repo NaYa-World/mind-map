@@ -1,9 +1,9 @@
-
+// @ts-nocheck
 import * as Sentry from '@sentry/browser';
 
 try {
   Sentry.init({
-    dsn: "https://ae88499efe5421bfc61b1718689c5ad4@o4511514561085440.ingest.us.sentry.io/4511514576683008",
+    dsn: import.meta.env.VITE_SENTRY_DSN || "",
     integrations: [],
     tracesSampleRate: 0.1,
   });
@@ -14,6 +14,9 @@ try {
 /* ============================================================
    MINDMAP APPLICATION CLASS
    ============================================================ */
+export interface MindMapApp extends LayoutMixin, StorageMixin, HistoryMixin, RenderMixin, EventsMixin, CrudMixin, ModalsMixin {
+  [key: string]: any; // Catch-all for dynamic properties during migration
+}
 class MindMapApp {
 constructor() {
     /* ---- state ---- */
@@ -61,13 +64,13 @@ constructor() {
   }
 }
 
-import { LayoutMixin } from './src/core/layout.js';
-import { StorageMixin } from './src/core/storage.js';
-import { HistoryMixin } from './src/core/history.js';
-import { RenderMixin } from './src/ui/render.js';
-import { EventsMixin } from './src/ui/events.js';
-import { CrudMixin } from './src/core/crud.js';
-import { ModalsMixin } from './src/ui/modals.js';
+import { LayoutMixin } from './src/core/layout';
+import { StorageMixin } from './src/core/storage';
+import { HistoryMixin } from './src/core/history';
+import { RenderMixin } from './src/ui/render';
+import { EventsMixin } from './src/ui/events';
+import { CrudMixin } from './src/core/crud';
+import { ModalsMixin } from './src/ui/modals';
 import { encryptPayload, decryptPayload } from './src/core/crypto.js';
 
 function applyMixins(targetClass, baseClasses) {
@@ -94,7 +97,7 @@ applyMixins(MindMapApp, [LayoutMixin, StorageMixin, HistoryMixin, RenderMixin, E
 class GoogleDriveManager {
   constructor(app) {
     this.app = app;
-    this.clientId = '86489755421-e7utfmuof73lmb8cc2k6isf1dmoe1mdn.apps.googleusercontent.com';
+    this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
     this.scopes = 'https://www.googleapis.com/auth/drive.file';
     this.tokenClient = null;
     this.accessToken = null;
@@ -111,6 +114,7 @@ class GoogleDriveManager {
             return;
           }
           this.accessToken = response.access_token;
+          this.tokenAcquiredAt = Date.now();
           if (this._pendingAction) {
             this._pendingAction();
             this._pendingAction = null;
@@ -213,12 +217,17 @@ class GoogleDriveManager {
             return;
           }
           this.accessToken = response.access_token;
+          this.tokenAcquiredAt = Date.now();
           if (this._pendingAction) {
             this._pendingAction();
             this._pendingAction = null;
           }
         },
       });
+    }
+
+    if (this.accessToken && this.tokenAcquiredAt && (Date.now() - this.tokenAcquiredAt > 3000 * 1000)) {
+      this.accessToken = null;
     }
 
     if (this.accessToken) {
@@ -238,9 +247,19 @@ class GoogleDriveManager {
       return;
     }
     this._requireAuth(async () => {
-      this.app.toast('Saving to Google Drive...', 'info');
       try {
-        const encryptedData = await encryptPayload(JSON.stringify(payload));
+        let password;
+        try {
+          password = await this.app.promptPassword(
+            'Sync to Google Drive',
+            'Enter a password to encrypt this MindMap file on your Google Drive.'
+          );
+        } catch (e) {
+          this.app.toast('Sync cancelled: password required', 'warn');
+          return;
+        }
+        this.app.toast('Saving to Google Drive...', 'info');
+        const encryptedData = await encryptPayload(JSON.stringify(payload), password);
         const fileContent = JSON.stringify(encryptedData, null, 2);
         const file = new Blob([fileContent], {type: 'application/json'});
         const name = (payload.name || 'Untitled Map') + '.json';
@@ -300,7 +319,19 @@ class GoogleDriveManager {
               if (!res.ok) throw new Error('Download failed');
               let mapData = await res.json();
               if (mapData && mapData.encrypted) {
-                mapData = await decryptPayload(mapData);
+                let password;
+                if (mapData.salt) {
+                  try {
+                    password = await this.app.promptPassword(
+                      'Decrypt MindMap',
+                      'This Google Drive file is password-protected. Please enter the password to open it.'
+                    );
+                  } catch (pErr) {
+                    this.app.toast('Sync cancelled: password required', 'warn');
+                    return;
+                  }
+                }
+                mapData = await decryptPayload(mapData, password);
               }
               this.app._importJSON(mapData);
             } catch (err) {
@@ -313,6 +344,7 @@ class GoogleDriveManager {
       picker.setVisible(true);
     });
   }
+
 }
 
 /* ============================================================
@@ -379,12 +411,49 @@ class DBManager {
     });
   }
 }
+async function verifyLicenseKey(key) {
+  if (!key) return false;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key.trim());
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Obfuscated representation of target hash via split base64
+  const _k = [
+    'MzNk', 'ZTUx', 'ZmQy', 'Y2M2', 'MWUy', 'NmZi', 'YWJk', 'MjU3', 
+    'YmM4', 'MzE2', 'ZjQ2', 'Zjkw', 'ZmM1', 'NzA3', 'NzUx', 'ODhl', 
+    'M2Ez', 'Mjkx', 'MWEy', 'OGNi', 'Zjg1', 'ZA=='
+  ].join('');
+  
+  return hashHex === window.atob(_k);
+}
+
+
 /* ============================================================
    BOOT (async — waits for DB)
    ============================================================ */
 let app;
 let driveManager;
 document.addEventListener('DOMContentLoaded', async () => {
+  // Verify License Key
+  const licenseKey = import.meta.env.VITE_LICENSE_KEY || '';
+  const isLicensed = await verifyLicenseKey(licenseKey);
+  if (!isLicensed) {
+    document.body.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#0b0c10; color:#eeeef5; font-family:'Inter', sans-serif; text-align:center; padding:20px; box-sizing:border-box;">
+        <h1 style="color:#f87171; font-size:30px; font-weight:700; margin-bottom:12px; font-family:'Inter', sans-serif;">⚠️ License Key Missing or Invalid</h1>
+        <p style="color:rgba(238, 238, 245, 0.65); max-width:480px; font-size:14.5px; line-height:1.6; margin-bottom:24px; font-family:'Inter', sans-serif;">
+          Execution halted. To run Naya MindMap, please copy <code>.env.example</code> to <code>.env</code> and define the correct <code>VITE_LICENSE_KEY</code> parameter.
+        </p>
+        <div style="background:#1c1c28; border:1px solid rgba(255,255,255,0.08); padding:12px 24px; border-radius:8px; font-size:13px; color:#4fc3f7; font-family:monospace; display:inline-block;">
+          VITE_LICENSE_KEY=your_license_key_here
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   /* Handle Animated Splash Screen */
   document.body.classList.add('splash-active');
   setTimeout(() => {
@@ -408,9 +477,77 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   app = new MindMapApp();
   
+  app.promptPassword = function(title, description) {
+    return new Promise((resolve, reject) => {
+      const modal = document.getElementById('modal-password');
+      const titleEl = document.getElementById('modal-password-title');
+      const descEl = document.getElementById('modal-password-desc');
+      const input = document.getElementById('password-input');
+      const submitBtn = document.getElementById('btn-password-submit');
+      const cancelBtn = document.getElementById('btn-password-cancel');
+      const bg = modal?.querySelector('.modal-bg');
+
+      if (!modal || !input || !submitBtn || !cancelBtn) {
+        reject(new Error('Password modal elements not found'));
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (descEl) descEl.textContent = description;
+      input.value = '';
+      modal.classList.remove('hidden');
+      input.focus();
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        submitBtn.removeEventListener('click', onSubmit);
+        cancelBtn.removeEventListener('click', onCancel);
+        bg?.removeEventListener('click', onCancel);
+        input.removeEventListener('keydown', onKeyDown);
+      };
+
+      const onSubmit = () => {
+        const val = input.value;
+        if (!val) {
+          alert('Password cannot be empty');
+          return;
+        }
+        cleanup();
+        resolve(val);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        reject(new Error('Password prompt cancelled'));
+      };
+
+      const onKeyDown = (e) => {
+        if (e.key === 'Enter') {
+          onSubmit();
+        } else if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+
+      submitBtn.addEventListener('click', onSubmit);
+      cancelBtn.addEventListener('click', onCancel);
+      bg?.addEventListener('click', onCancel);
+      input.addEventListener('keydown', onKeyDown);
+    });
+  };
+  
+  app.isMobilePremiumUnlocked = false;
+  if (import.meta.env.VITE_BUILD_TARGET === 'mobile') {
+    app.isMobilePremiumUnlocked = await app.checkMobileBillingStatus();
+  }
+  
   app.isPremium = function() {
+    if (import.meta.env.VITE_BUILD_TARGET === 'mobile') {
+      return this.isMobilePremiumUnlocked;
+    }
     return localStorage.getItem('naya_premium') === 'true';
   };
+
   
   app.requirePremium = function() {
     if (this.isPremium()) return true;
@@ -422,17 +559,76 @@ document.addEventListener('DOMContentLoaded', async () => {
     return false;
   };
 
+  app._mobilePremiumCached = null;
+  app.isMobilePremiumUnlocked = false;
+
+  app.checkMobileBillingStatus = async function() {
+    if (this._mobilePremiumCached !== null) return this._mobilePremiumCached;
+
+    const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    if (!isNative) {
+      this._mobilePremiumCached = false;
+      return false;
+    }
+
+    try {
+      // Dynamically load Capacitor In-App Purchase to prevent import failures in non-android environments
+      const { InAppPurchase } = await import('@capacitor-community/in-app-purchase');
+      const purchases = await InAppPurchase.getPurchases();
+      const hasUpgrade = purchases.some(p => p.productId === 'premium_upgrade');
+      this._mobilePremiumCached = hasUpgrade;
+      return hasUpgrade;
+    } catch (e) {
+      console.warn('Capacitor IAP check skipped/unavailable:', e.message);
+      // Local fallback during emulation testing
+      const localFallback = localStorage.getItem('naya_premium') === 'true';
+      this._mobilePremiumCached = localFallback;
+      return localFallback;
+    }
+  };
+
   /* Attach Upgrade Button Event */
-  document.getElementById('btn-upgrade-now')?.addEventListener('click', () => {
+  document.getElementById('btn-upgrade-now')?.addEventListener('click', async () => {
     if (window.posthog) window.posthog.capture('Upgrade Clicked');
-    window.location.href = "https://buy.stripe.com/test_dummy_link"; // Replace with real Stripe Payment Link
+    
+    const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    if (isNative || import.meta.env.VITE_BUILD_TARGET === 'mobile') {
+      app.toast('Connecting to Google Play Billing...', 'info');
+      try {
+        const { InAppPurchase } = await import('@capacitor-community/in-app-purchase');
+        await InAppPurchase.purchase({ productId: 'premium_upgrade' });
+        
+        // Reload purchase state
+        app._mobilePremiumCached = null;
+        app.isMobilePremiumUnlocked = await app.checkMobileBillingStatus();
+        if (app.isMobilePremiumUnlocked) {
+          app.toast('Premium upgrade successful! Thank you!', 'success');
+          document.getElementById('modal-upgrade')?.classList.add('hidden');
+          app.render();
+        }
+      } catch (e) {
+        console.error('Google Play purchase failed:', e);
+        app.toast('Purchase failed or cancelled', 'error');
+      }
+    } else {
+      window.location.href = import.meta.env.VITE_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/test_dummy_link";
+    }
   });
 
-  document.getElementById('btn-upgrade-bypass')?.addEventListener('click', () => {
-    localStorage.setItem('naya_premium', 'true');
-    document.getElementById('modal-upgrade')?.classList.add('hidden');
-    app.toast('Premium features unlocked for testing!', 'success');
-  });
+
+  const bypassBtn = document.getElementById('btn-upgrade-bypass');
+  if (bypassBtn) {
+    if (import.meta.env.DEV) {
+      bypassBtn.addEventListener('click', () => {
+        localStorage.setItem('naya_premium', 'true');
+        document.getElementById('modal-upgrade')?.classList.add('hidden');
+        app.toast('Premium features unlocked for testing!', 'success');
+      });
+    } else {
+      bypassBtn.style.display = 'none';
+    }
+  }
+
 
   if (typeof GoogleDriveManager !== 'undefined') {
     driveManager = new GoogleDriveManager(app);
@@ -457,12 +653,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     mapNameInput.addEventListener('input', () => {
       clearTimeout(nameTimer);
       app._setSaveState('saving');
-      nameTimer = setTimeout(() => app._saveDB(), 800);
+      nameTimer = setTimeout(() => app._saveDB(), 2000);
     });
     mapNameInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); mapNameInput.blur(); }
     });
   }
+
+  // Guarantee that any pending auto-saves are written to IndexedDB on page close
+  window.addEventListener('beforeunload', () => {
+    if (app && app.saveTimer) {
+      app._saveDB();
+    }
+  });
+
 
   /* 3. Wire Maps modal */
   document.getElementById('btn-maps')?.addEventListener('click', () => app._openMapsModal());

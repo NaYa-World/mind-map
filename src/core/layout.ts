@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from './utils.js';
 
 export const LayoutMixin = class {
@@ -17,13 +18,6 @@ _applyLayout(type) {
       case 'linear':     this._layLinear();       break;
       case 'radial':     this._layRadial();       break;
       case 'matrix':     this._layMatrix();       break;
-      case 'addImage': {
-          this._showModal('modal-image');
-          const inp = document.getElementById('image-url-input');
-          if (inp) inp.value = this.nodes.get(id)?.imageUrl || '';
-          document.getElementById('modal-image').dataset.nodeId = id;
-          break;
-        }
       default:           this._layHorizontal();
     }
     

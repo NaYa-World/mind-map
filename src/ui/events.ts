@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CFG, SVG_NS, THEMES, LAYOUTS, LAYOUT_PREVIEWS, genId, clamp, svgEl } from '../core/utils.js';
 
 export const EventsMixin = class {
@@ -121,6 +122,7 @@ _setupCanvas() {
         this._renderNodes();
         this._renderOutline();
       } else if (e.touches.length === 2) {
+        e.preventDefault();
         this.isPanning = false;
         this.isPinchZooming = true;
         const touch1 = e.touches[0];
@@ -129,9 +131,13 @@ _setupCanvas() {
         this.pinchStartZoom = this.zoom;
         this.svgRect = svg.getBoundingClientRect();
       }
-    }, { passive: true });
+    }, { passive: false });
+
 
     document.addEventListener('touchmove', e => {
+      if (this.isPanning || this.isDragging) {
+        e.preventDefault();
+      }
       const touch = e.touches[0];
       if (this.isPanning && touch) {
         this.panX = touch.clientX - this.panSX;
@@ -442,15 +448,31 @@ _setupToolbar() {
       const badge = document.getElementById('editor-mode-indicator');
       if (!badge) return;
       if (locked) {
-        badge.textContent = '\uD83D\uDD12 Locked';
+        badge.innerHTML = '🔒<span class="btn-label"> Locked</span>';
         badge.classList.remove('editor-mode-edit');
         badge.classList.add('editor-mode-lock');
       } else {
-        badge.textContent = '\u270F\uFE0F Edit';
+        badge.innerHTML = '✏️<span class="btn-label"> Edit</span>';
         badge.classList.remove('editor-mode-lock');
         badge.classList.add('editor-mode-edit');
       }
     };
+
+    document.getElementById('editor-mode-indicator')?.addEventListener('click', e => {
+      e.stopPropagation();
+      this.isLocked = !this.isLocked;
+      updateModeIndicator(this.isLocked);
+      this.toast(this.isLocked ? 'MindMap is locked — no edits allowed' : 'Editing enabled', this.isLocked ? 'info' : 'success');
+      
+      // Update submenu highlights if open
+      if (this.isLocked) {
+        document.getElementById('btn-mode-lock')?.classList.add('dropdown-item-active');
+        document.getElementById('btn-mode-edit')?.classList.remove('dropdown-item-active');
+      } else {
+        document.getElementById('btn-mode-edit')?.classList.add('dropdown-item-active');
+        document.getElementById('btn-mode-lock')?.classList.remove('dropdown-item-active');
+      }
+    });
 
     // Mode submenu options
     document.getElementById('btn-mode-edit')?.addEventListener('click', e => {
@@ -488,7 +510,7 @@ _setupToolbar() {
       
       const totalNodes = this.nodes.size;
       const totalCrossLinks = this.crossLinks.length;
-      const mapName = document.getElementById('map-name-input')?.value || 'Untitled Map';
+      const mapName = document.getElementById('map-name-input')?.value || 'Welcome to MindMap';
       const activeLayout = LAYOUTS.find(l => l.id === this.layout)?.name || this.layout;
       
       let activeThemeName = this.theme;
@@ -757,7 +779,11 @@ toggleCollapse(id) {
     this._schedSave();
   }
 
-toggleWrap(id) {
+  toggleWrap(id) {
+    if (this.isLocked) {
+      this.toast('MindMap is locked', 'warn');
+      return;
+    }
     const node = this.nodes.get(id);
     if (!node) return;
     this._pushUndo();
